@@ -37,8 +37,9 @@ To get started with `UbiquityStoreManager`, all you need to do is instantiate it
                           withManagedObjectModel:nil
                                    localStoreURL:nil
                              containerIdentifier:nil
-                          additionalStoreOptions:nil
-                                        delegate:self]
+                              storeConfiguration:nil
+                                    storeOptions:nil
+                                        delegate:self];
 
 The `nil` parameters can all be used to customize `UbiquityStoreManager`'s behavior.  For instance, if you already have a local store, you can pass its URL as the localStoreURL.
 
