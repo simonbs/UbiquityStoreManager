@@ -14,9 +14,10 @@ The API has been kept as simple as possible while giving you, the application de
 
 I provide `UbiquityStoreManager` and its example application to you for free and do not take any responsability for what it may do in your application.
 
-Creating `UbiquityStoreManager` has taken me a huge amount of work and few developers have so far been brave enough to try and solve the iCloud for Core Data problem that Apple left us with.  This code is provided to you free of cost, in the hopes that it will be useful to you in its current form or another.  If this solution is useful to you, please consider saying *thanks* or donating to the cause.
+Creating and maintaining `UbiquityStoreManager` takes a huge amount of work.  This code is provided to you free of cost, in the hopes that it will be useful to you in its current form or another.  If this solution is useful to you, send me a thank-you note, or consider donating to the cause.
 
-<a href='http://www.pledgie.com/campaigns/19629'><img alt='Click here to lend your support to: UbiquityStoreManager and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/19629.png?skin_name=chrome' border='0' /></a>
+<script data-gittip-username="lhunath"
+  src="//gttp.co/v1.js"></script>
 
 # Note on iOS 7
 
