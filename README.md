@@ -1,3 +1,6 @@
+[![Gittip](http://img.shields.io/gittip/lhunath.png)](https://www.gittip.com/lhunath/)
+[![Travis CI](http://img.shields.io/travis-ci/lhunath/UbiquityStoreManager.png)](https://travis-ci.org/lhunath/UbiquityStoreManager)
+
 # About
 
 `UbiquityStoreManager` is a controller that implements **iCloud integration with Core Data** for you, and takes away all the hardship.
@@ -15,9 +18,6 @@ The API has been kept as simple as possible while giving you, the application de
 I provide `UbiquityStoreManager` and its example application to you for free and do not take any responsability for what it may do in your application.
 
 Creating and maintaining `UbiquityStoreManager` takes a huge amount of work.  This code is provided to you free of cost, in the hopes that it will be useful to you in its current form or another.  If this solution is useful to you, send me a thank-you note, or consider donating to the cause.
-
-<script data-gittip-username="lhunath"
-  src="//gttp.co/v1.js"></script>
 
 # Note on iOS 7
 
