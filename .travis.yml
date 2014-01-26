@@ -1,3 +1,4 @@
 language: objective-c
 xcode_project: UbiquityStoreManagerExample.xcodeproj
 xcode_scheme: UbiquityStoreManagerExample
+xcode_sdk: iphonesimulator
