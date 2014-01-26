@@ -41,14 +41,6 @@
     [self configureView];
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone)
-        return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
-
-    return YES;
-}
-
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
 
     if (!(self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]))

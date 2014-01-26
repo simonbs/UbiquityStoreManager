@@ -30,9 +30,8 @@
     NSLog( @"Starting UbiquityStoreManagerExample on device: %@\n\n", [UIDevice currentDevice].name );
 
     // STEP 1 - Initialize the UbiquityStoreManager
-    _ubiquityStoreManager = [[UbiquityStoreManager alloc] initStoreNamed:nil withManagedObjectModel:nil
-                                                           localStoreURL:nil containerIdentifier:nil additionalStoreOptions:nil
-                                                                delegate:self];
+    _ubiquityStoreManager = [[UbiquityStoreManager alloc] initStoreNamed:nil withManagedObjectModel:nil localStoreURL:nil
+                                                     containerIdentifier:nil storeConfiguration:nil storeOptions:nil delegate:self];
 
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].applicationFrame];
 
@@ -138,7 +137,8 @@
 #pragma mark - UbiquityStoreManagerDelegate
 
 // STEP 2 - Implement the UbiquityStoreManager delegate methods
-- (NSManagedObjectContext *)managedObjectContextForUbiquityChangesInManager:(UbiquityStoreManager *)manager {
+- (NSManagedObjectContext *)ubiquityStoreManager:(UbiquityStoreManager *)manager
+          managedObjectContextForUbiquityChanges:(NSNotification *)note {
 
     return self.managedObjectContext;
 }

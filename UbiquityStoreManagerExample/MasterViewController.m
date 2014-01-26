@@ -98,14 +98,6 @@
     } );
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone)
-        return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
-    
-    return YES;
-}
-
 - (void)insertNewObject:(id)sender {
 
     NSManagedObjectContext *context = self.fetchedResultsController.managedObjectContext;
