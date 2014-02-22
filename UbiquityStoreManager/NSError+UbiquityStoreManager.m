@@ -20,17 +20,12 @@ NSString *const USMStoreURLsErrorKey = @"USMStoreURLsErrorKey";
 
     self = [self init_USM_WithDomain:domain code:code userInfo:dict];
     if ([domain isEqualToString:NSCocoaErrorDomain] && code == 134302) {
-        if (![self handleError:self]) {
+        if (![self _USM_handleError:self]) {
             NSLog( @"===" );
             NSLog( @"Detected unknown ubiquity import error." );
             NSLog( @"Please report this at http://lhunath.github.io/UbiquityStoreManager" );
             NSLog( @"and provide details of the conditions and whether or not you notice" );
-            NSLog( @"any sync issues afterwards.  Error userInfo:" );
-            for (id key in dict) {
-                id value = dict[key];
-                NSLog( @"[%@] %@ => [%@] %@", [key class], key, [value class], value );
-            }
-            NSLog( @"Error Debug Description:\n%@", [self debugDescription] );
+            NSLog( @"any sync issues afterwards.  Error:\n%@", [self _USM_fullDescription] );
             NSLog( @"===" );
         }
     }
@@ -38,7 +33,7 @@ NSString *const USMStoreURLsErrorKey = @"USMStoreURLsErrorKey";
     return self;
 }
 
-- (BOOL)handleError:(NSError *)error {
+- (BOOL)_USM_handleError:(NSError *)error {
 
     if (!error)
         return NO;
@@ -58,24 +53,85 @@ NSString *const USMStoreURLsErrorKey = @"USMStoreURLsErrorKey";
         }];
         return YES;
     }
-    if ([(NSString *)(error.userInfo)[@"reason"] hasPrefix:@"Error reading the log file at location: (null)"]) {
+    if ([(NSString *)error.userInfo[@"reason"] hasPrefix:@"Error reading the log file at location: (null)"]) {
         // Severity: Delayed Import?
         // Cause: Log file failed to download?
         // Action: Ignore.
         return YES;
     }
 
-    if ([self handleError:(error.userInfo)[NSUnderlyingErrorKey]])
+    if ([self _USM_handleException:error.userInfo[@"NSUnderlyingException"]])
         return YES;
-    if ([self handleError:(error.userInfo)[@"underlyingError"]])
+    if ([self _USM_handleError:error.userInfo[NSUnderlyingErrorKey]])
+        return YES;
+    if ([self _USM_handleError:error.userInfo[@"underlyingError"]])
         return YES;
 
-    NSArray *errors = (error.userInfo)[@"NSDetailedErrors"];
+    NSArray *errors = error.userInfo[@"NSDetailedErrors"];
     for (NSError *error_ in errors)
-        if ([self handleError:error_])
+        if ([self _USM_handleError:error_])
             return YES;
 
     return NO;
+}
+
+- (BOOL)_USM_handleException:(NSException *)exception {
+
+    if (!exception)
+        return NO;
+
+    if (exception.userInfo[NSSQLiteErrorDomain]) {
+        // Severity: Critical To Cloud Content
+        // Cause: An internal SQLite inconsistency
+        // Action: Mark corrupt, request rebuild.
+        NSMutableArray *storeURLs = [NSMutableArray arrayWithObject:[NSURL URLWithString:[exception userInfo][@"NSFilePath"]]];
+        [[NSNotificationCenter defaultCenter] postNotificationName:UbiquityManagedStoreDidDetectCorruptionNotification object:@{
+                NSUnderlyingErrorKey : self,
+                USMStoreURLsErrorKey : storeURLs,
+        }];
+        return YES;
+    }
+
+    return NO;
+}
+
+- (NSString *)_USM_fullDescription {
+
+    NSMutableString *fullDescription = [NSMutableString new];
+    [fullDescription appendFormat:@"Error: %lu (%@): %@\n", (long)self.code, self.domain, self.localizedDescription];
+    if (self.localizedRecoveryOptions)
+        [fullDescription appendFormat:@" - RecoveryOptions: %@\n", self.localizedRecoveryOptions];
+    if (self.localizedRecoverySuggestion)
+        [fullDescription appendFormat:@" - RecoverySuggestion: %@\n", self.localizedRecoverySuggestion];
+    if (self.localizedFailureReason)
+        [fullDescription appendFormat:@" - FailureReason: %@\n", self.localizedFailureReason];
+    if (self.helpAnchor)
+        [fullDescription appendFormat:@" - HelpAnchor: %@\n", self.helpAnchor];
+    if (self.userInfo) {
+        for (id key in self.userInfo) {
+            id info = self.userInfo[key];
+            NSMutableString *infoString;
+            if ([info respondsToSelector:@selector(_USM_fullDescription)])
+                infoString = [[info _USM_fullDescription] mutableCopy];
+            else if ([info isKindOfClass:[NSException class]])
+                infoString = [NSMutableString stringWithFormat:@"%@: %@ %@", [info name], [info reason], [info userInfo]];
+            else if ([info respondsToSelector:@selector(debugDescription)])
+                infoString = [[info debugDescription] mutableCopy];
+            else
+                infoString = [[info description] mutableCopy];
+
+            NSString *keyString = [NSString stringWithFormat:@" - Info %@: [%@] ", key, [info class]];
+            NSString *indentedNewline = [@"\n" stringByPaddingToLength:[keyString length] + 1
+                                                            withString:@" " startingAtIndex:0];
+            [infoString replaceOccurrencesOfString:@"\n" withString:indentedNewline options:0
+                                             range:NSMakeRange( 0, [infoString length] )];
+            [fullDescription appendString:keyString];
+            [fullDescription appendString:infoString];
+            [fullDescription appendString:@"\n"];
+        }
+    }
+
+    return fullDescription;
 }
 
 @end

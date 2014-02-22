@@ -157,6 +157,9 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
 
 + (void)initialize {
 
+    if (self != [UbiquityStoreManager class])
+        return;
+
     if (![self respondsToSelector:@selector(jr_swizzleMethod:withMethod:error:)]) {
         NSLog( @"UbiquityStoreManager: Warning: JRSwizzle not present, won't be able to detect desync issues." );
         return;
