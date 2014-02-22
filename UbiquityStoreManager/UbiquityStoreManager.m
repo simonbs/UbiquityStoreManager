@@ -179,7 +179,8 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
 }
 
 - (id)initStoreNamed:(NSString *)contentName withManagedObjectModel:(NSManagedObjectModel *)model localStoreURL:(NSURL *)localStoreURL
- containerIdentifier:(NSString *)containerIdentifier storeConfiguration:(NSString *)storeConfiguration storeOptions:(NSDictionary *)storeOptions
+ containerIdentifier:(NSString *)containerIdentifier storeConfiguration:(NSString *)storeConfiguration
+        storeOptions:(NSDictionary *)storeOptions
             delegate:(id<UbiquityStoreManagerDelegate>)delegate {
 
     if (!(self = [super init]))
@@ -722,7 +723,7 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
         cloudEnabled = NO;
 
         if (!self.cloudWasEnabled)
-            // Cloud was disabled and can't enable it, we don't need to reload: the local store is already active.
+                // Cloud was disabled and can't enable it, we don't need to reload: the local store is already active.
             return;
     }
 
@@ -811,6 +812,7 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
             self.attemptCloudRecovery = NO;
             self.migrationStoreURL = nil;
 
+            [self updateStoreUUIDAsynchronously:YES];
             [self log:@"Successfully loaded cloud store."];
         }
         else {
@@ -1730,7 +1732,29 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
             // A tentative StoreUUID is set; this means a new cloud store is being created.
         return self.tentativeStoreUUID;
 
-    NSURL *storeUUIDFile = [self URLForCloudStoreUUID];;
+    NSString *storeUUID = [[NSUserDefaults standardUserDefaults] stringForKey:[[self URLForCloudStoreUUID] path]];
+    if (![storeUUID length])
+        storeUUID = [self readStoreUUID];
+
+    return storeUUID;
+}
+
+- (void)updateStoreUUIDAsynchronously:(BOOL)asynchronous {
+
+    if (asynchronous)
+        dispatch_async( dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0 ), ^{
+            [self updateStoreUUIDAsynchronously:NO];
+        } );
+    else {
+        NSString *storeUUID = [self readStoreUUID], *activeStoreUUID = [self activeCloudStoreUUID];
+        if (activeStoreUUID && ![activeStoreUUID isEqualToString:storeUUID] && self.cloudEnabled)
+            [self reloadStore];
+    }
+}
+
+- (NSString *)readStoreUUID {
+
+    NSURL *storeUUIDFile = [self URLForCloudStoreUUID];
     __block NSString *storeUUID = nil;
 
     // Store UUID is not coordinated, first get into a coordinator block.
@@ -1749,6 +1773,7 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
     if (coordinationError)
         [self error:coordinationError cause:UbiquityStoreErrorCauseOpenActiveStore context:[storeUUIDFile path]];
 
+    [[NSUserDefaults standardUserDefaults] setObject:storeUUID forKey:[storeUUIDFile path]];
     return storeUUID;
 }
 
@@ -1865,10 +1890,12 @@ extern NSString *NSStringFromUSMCause(UbiquityStoreErrorCause cause) {
     if (![self ensureQueued:^{ [self storeUUIDDidChange]; }])
         return;
 
-    // The UUID of the active store changed.  We need to switch to the newly activated store.
+    // Read the new store UUID and check whether it's actually changed.
+    [self updateStoreUUIDAsynchronously:NO];
     if ([self.activeCloudStoreUUID isEqualToString:self.storeUUID])
         return;
 
+    // The UUID of the active store changed.  We need to switch to the newly activated store.
     [self log:@"StoreUUID changed %@ -> %@", self.activeCloudStoreUUID, [self storeUUIDForLog]];
     [self unsetTentativeStoreUUID];
     [self cloudStoreChanged:nil];
